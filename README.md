@@ -221,7 +221,7 @@ DISCORD_WEBHOOK_URL="Sua URL aqui"
 LOG_FILE="/var/log/monitoramento.log"
 
 TIMESTAMP=$(date +"%d-%m-%Y %H:%M:%S")
-```
+
 
 ```bash
 *     *     *   *   *     comando-a-ser-executado
@@ -234,5 +234,148 @@ TIMESTAMP=$(date +"%d-%m-%Y %H:%M:%S")
 ```
 
 
+# Etapa 1: Configuração do Ambiente
+
+### 1.1 – Criação da VPC
+
+![Criar VPC TESTE](Imagens/CRIAR_VPC_TESTE.png)
+
+Para conseguir a configuração das 2 sub-redes públicas e privadas, é necessário seguir as mesmas configurações das imagens abaixo. Após isso, pressione o botão Criar VPC:
+
+![Configuração da VPC Parte 1](Imagens/Config_VPC_1.png)
+
+![Configuração da VPC Parte 2](Imagens/Config_VPC_2.png)
 
 
+
+Explicando o código completo:
+
+```bash
+#!/bin/bash
+
+URL="Sua_URL"
+TIMEOUT=10
+EXPECTED_STATUS=200
+DISCORD_WEBHOOK_URL="Seu_Link_Webhook"
+LOG_FILE="/var/log/monitoramento.log"
+
+TIMESTAMP=$(date +"%d-%m-%Y %H:%M:%S")
+```
+
+`URL`: O endereço do site a ser monitorado.
+`TIMEOUT: O tempo máximo, em segundos, que o curl aguardará por uma resposta.
+
+`EXPECTED_STATUS`: O código de status HTTP esperado para considerar o site online (neste caso, 200 OK).
+
+`DISCORD_WEBHOOK_URL`: O URL do webhook do Discord para onde as notificações serão enviadas.
+
+`LOG_FILE`: O caminho completo para o arquivo de log onde os registros das verificações serão salvos.
+
+`TIMESTAMP`: Captura a data e hora atual no formato "DD-MM-AAAA HH:MM:SS" para ser usada nos logs e notificações.
+
+==========================================================
+
+```bash
+send_discord_notification() {
+    local message="$1" 
+
+    JSON_PAYLOAD=$(cat <<EOF
+{
+  "content": "${TIMESTAMP} - ${message}"
+}
+EOF
+)
+
+    curl -H "Content-Type: application/json" \
+         -X POST \
+         -d "$JSON_PAYLOAD" \
+         "$DISCORD_WEBHOOK_URL" > /dev/null 2>&1
+}
+```
+
+`local message="$1"`: Declara uma variável local message e atribui a ela o primeiro argumento passado para a função.
+
+`JSON_PAYLOAD`: Cria um payload JSON que será enviado ao Discord. O campo content inclui o timestamp e a mensagem fornecida.
+
+`curl -H "Content-Type`: application/json" -X POST -d "$JSON_PAYLOAD" "$DISCORD_WEBHOOK_URL" > /dev/null 2>&1: Este comando curl envia o payload JSON para o Discord webhook URL.
+
+`-H "Content-Type: application/json"`: Define o cabeçalho HTTP para indicar que o corpo da requisição é JSON.
+
+`-X POST`: Especifica que a requisição é do tipo POST.
+
+`-d "$JSON_PAYLOAD"`: Inclui os dados JSON como corpo da requisição.
+
+`> /dev/null 2>&1`: Redireciona a saída padrão e de erro do curl para /dev/null, evitando que ele imprima qualquer coisa no terminal.
+
+=================================================================
+
+```bash
+echo "--- Verificação iniciada em: $TIMESTAMP ---" >> "$LOG_FILE"
+echo "Verificando a disponibilidade HTTP de: $URL" >> "$LOG_FILE"
+echo "Tempo limite: $TIMEOUT segundos" >> "$LOG_FILE"
+echo "Status HTTP esperado: $EXPECTED_STATUS" >> "$LOG_FILE"
+echo "--------------------------------------------------" >> "$LOG_FILE"
+```
+
+`echo`: adiciona informações iniciais sobre a verificação no arquivo de log ($LOG_FILE)
+
+`>>`: anexa o texto ao final do arquivo, sem sobrescrever o conteúdo existente. Isso cria um registro cronológico de cada execução do script.
+
+====================================================================
+
+```bash
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time "$TIMEOUT" --retry 3 --retry-max-time 30 "$URL")
+CURL_EXIT_CODE=$?
+```
+
+Utilizando o comando curl, ocorre a verificação principal:
+
+`-s`: Modo silencioso, suprime a barra de progresso e mensagens de erro do curl.
+
+`-o /dev/null`: Descarta a saída do corpo da resposta HTTP.
+
+`-w "%{http_code}"`: Faz com que o curl imprima apenas o código de status HTTP da resposta.
+
+`-L`: Segue redirecionamentos HTTP.
+
+`--max-time "$TIMEOUT"`: Define o tempo máximo, em segundos, para a operação completa.
+
+`--retry 3`: Tenta a conexão até 3 vezes em caso de falha temporária.
+
+`--retry-max-time 30`: Define o tempo máximo total para todas as tentativas de reconexão.
+
+`"$URL"`: A URL do site a ser verificado.
+
+`HTTP_STATUS=$()`: A saída do comando curl (o código de status HTTP) é capturada e armazenada na variável HTTP_STATUS.
+
+`CURL_EXIT_CODE=$?`: A variável especial $? captura o código de saída do último comando executado (curl, neste caso). Um código de saída 0 geralmente indica sucesso.
+
+================================
+
+```bash
+if [ "$CURL_EXIT_CODE" -eq 0 ]; then
+    if [ "$HTTP_STATUS" -eq "$EXPECTED_STATUS" ]; then
+        MESSAGE="✅ Site está ONLINE e respondeu com status HTTP $HTTP_STATUS (esperado)."
+        send_discord_notification "$MESSAGE" 3066993   
+    fi
+else
+    MESSAGE="❌ Site está OFFLINE ou inacessível. Erro de conexão (curl exit code: $CURL_EXIT_CODE)."
+    MESSAGE+=" Causas: Host não encontrado, timeout de conexão, problema de DNS."
+    send_discord_notification "$MESSAGE" 15158332 
+fi
+```
+
+`if [ "$CURL_EXIT_CODE" -eq 0 ]`; then: Verifica se o curl foi executado com sucesso (código de saída 0).
+
+`if [ "$HTTP_STATUS" -eq "$EXPECTED_STATUS" ]; then`: Se o curl foi bem-sucedido, verifica se o HTTP_STATUS é igual ao EXPECTED_STATUS.
+
+Se sim, define a MESSAGE de sucesso e chama send_discord_notification com essa mensagem. O número 3066993 parece ser um valor adicional que não está sendo usado na função send_discord_notification como está definida, o que pode indicar um resquício de uma versão anterior ou um erro.
+
+`else`: Se o CURL_EXIT_CODE não for 0 (indicando um erro de conexão do curl), define uma MESSAGE de erro detalhada, mencionando possíveis causas e o código de saída do curl. Em seguida, chama send_discord_notification com essa mensagem. Assim como antes, o número 15158332 também não é utilizado pela função atual.
+
+```bash
+echo "$MESSAGE" >> "$LOG_FILE" 
+echo "--------------------------------------------------" >> "$LOG_FILE"
+echo " Verificação finalizada em: $TIMESTAMP " >> "$LOG_FILE"
+```
+Por fim, este bloco adiciona a mensagem resultante da verificação ($MESSAGE) e uma linha final ao arquivo de log, indicando que a verificação foi concluída, juntamente com o timestamp.
