@@ -138,10 +138,12 @@ nano seu_script.sh
 ```bash
 “HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time "$TIMEOUT" --retry 3 --retry-max-time 30 "$URL")
 CURL_EXIT_CODE=$?”
-•	Este comando faz uma requisição HTTP ao site configurado na variável URL e captura o código de status de resposta.
-•	--max-time "$TIMEOUT" define o tempo limite.
-•	CURL_EXIT_CODE verifica se a requisição foi bem-sucedida (0 = sucesso).
 ```
+
+Este comando faz uma requisição HTTP ao site configurado na variável URL e captura o código de status de resposta.
+--max-time "$TIMEOUT" define o tempo limite.
+CURL_EXIT_CODE verifica se a requisição foi bem-sucedida (0 = sucesso).
+
 3.2 - Criar logs das verificações em /var/log/monitoramento.log
 ```bash
 LOG_FILE="/var/log/monitoramento.log
@@ -226,7 +228,7 @@ Para conseguir a configuração das 2 sub-redes públicas e privadas, é necess�
 
 
 
-Explicando o código completo:
+### Explicando o código completo:
 
 ```bash
 #!/bin/bash
