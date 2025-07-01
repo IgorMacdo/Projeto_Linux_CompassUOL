@@ -212,28 +212,6 @@ Para iniciar novamente
 sudo systemctl start nginx
 ```
 
-#!/bin/bash
-
-URL="hotmail.com"
-TIMEOUT=10
-EXPECTED_STATUS=200
-DISCORD_WEBHOOK_URL="Sua URL aqui"
-LOG_FILE="/var/log/monitoramento.log"
-
-TIMESTAMP=$(date +"%d-%m-%Y %H:%M:%S")
-
-
-```bash
-*     *     *   *   *     comando-a-ser-executado
-│     │     │   │   │
-│     │     │   │   └── Dia da semana (0 = domingo)
-│     │     │   └────── Mês (1–12)
-│     │     └────────── Dia do mês (1–31)
-│     └─────────────── Hora (0–23)
-└──────────────────── Minuto (0–59)
-```
-
-
 # Etapa 1: Configuração do Ambiente
 
 ### 1.1 – Criação da VPC
@@ -261,6 +239,8 @@ LOG_FILE="/var/log/monitoramento.log"
 
 TIMESTAMP=$(date +"%d-%m-%Y %H:%M:%S")
 ```
+
+`#!/bin/bash`: Esta é a linha conhecida como shebang. Ela informa ao sistema operacional qual interpretador de comandos deve ser usado para executar este script. No seu caso, ele diz: "Use o Bash (Bourne Again SHell) que está localizado em /bin/bash para rodar este arquivo". Isso garante que o script funcione corretamente, mesmo que o usuário tenha um shell padrão diferente.
 
 `URL`: O endereço do site a ser monitorado.
 `TIMEOUT: O tempo máximo, em segundos, que o curl aguardará por uma resposta.
