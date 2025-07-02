@@ -28,7 +28,7 @@ Configure duas sub-redes (pública e privada) conforme as imagens abaixo, depois
 ![Configuração da VPC Parte 1](Imagens/Config_VPC_1.png)
 ![Configuração da VPC Parte 2](Imagens/Config_VPC_2.png)
 
-Para o Gateway de Internet:&#x20;
+Para o Gateway basta entrar na aba de Gateway(localizado no canto esquerdo) e Clicar no botão de criação:&#x20;
 ![Gateway de Internet](Imagens/GATEWAY.png)
 ### 1.2 - Criação de Instância EC2
 
@@ -38,13 +38,14 @@ Acesse a aba EC2 e clique em "Executar Instância":
 
 Selecione o sistema operacional conforme instruções:&#x20;
 ![Sistema Operacional](Imagens/SO.png)
-Na etapa de configuração de rede:
+Para instalar a sub rede criada anteriormente, basta clicar no botão de editar em “Configurações de rede”:
 ![Sub Rede Detalhes](Imagens/sub_rede.png)
+Será necessário selecionar a VPC criada, uma das sub redes públicas e atribuir IP público automaticamente:
 ![Configuração Sub Rede](Imagens/CONFIG_SUB_REDE.png)
 &#x20;
 
 
-Permita as portas HTTP (80) e SSH (22):&#x20;
+Para permitir o tráfego HTTP(80) e SSH(22) é necessário adicionar uma nova regra e configurando as duas, uma para SSH e outra para HTTP, utilize das mesmas opções da imagem:&#x20;
 ![Permitir Portas no Firewall](Imagens/Permitir_portas.png)
 
 ### 1.3 - Acesso via SSH (PuTTY)
@@ -56,7 +57,7 @@ Insira o IP público da instância:&#x20;
 ![Acessar Via SSH Passo 1](Imagens/Acessar_via_SSH.png)
 
 
-Configure o caminho da chave privada:&#x20;
+Configure o caminho da chave privada. É necessário navegar até a opção SSH, Auth e Credentials. Na aba Credentials, você vai clicar em Browse na primeira opção e inserir a key privada, logo, basta clicar em Open :&#x20;
 
 ![Acessar Via SSH Passo 2](Imagens/Acessar_Via_SSH_2.png)
 
@@ -64,21 +65,35 @@ Configure o caminho da chave privada:&#x20;
 
 ## Etapa 2: Instalação e Configuração do Servidor Web
 
-Servidor NGINX configurado em Ubuntu 22.04. Foi criada uma página HTML personalizada e configurado o systemd para reinício automático do serviço.
+Nessa etapa será instalado e configurado o servidor web Nginx na máquina virtual Ubuntu 22.04. Também será criada uma página HTML personalizada para ser servida pelo Nginx, contendo informações sobre o projeto. E por fim será criado um serviço systemd para garantir que o Nginx reinicie automaticamente se parar.
 
 ### 2.1 - Instalação do NGINX
 
+Primeiramente, realize a atualização dos pacotes do sistema
 ```bash
 sudo apt-get update
+```
+Faça a instalação do Nginx
+```bash
 sudo apt-get install nginx
+```
+Inicie o Nginx
+```bash
 sudo systemctl start nginx
+```
+Verifique o status para ver se está ativado
+```bash
 sudo systemctl status nginx
 ```
 
 ### 2.2 - Criar página HTML personalizada
 
+Crie uma pasta para o novo site
 ```bash
 mkdir -p /var/www/meusite/html
+```
+Agora crie o arquivo HTML e insira o seu código
+```bash
 nano /var/www/meusite/html/index.html
 ```
 
@@ -108,6 +123,7 @@ sudo systemctl restart nginx
 
 ### 2.4 - Systemd para reinício automático
 
+Função systemd para garantir que o Nginx reinicie automaticamente se parar.
 ```bash
 sudo nano /lib/systemd/system/nginx.service
 ```
@@ -191,6 +207,10 @@ O script precisa ter permissões de execução, pra isso, insira:
 
 ```bash
 chmod +x /caminho/para/seu_script.sh
+```
+
+Abra o crontab
+```bash
 crontab -e
 ```
 
@@ -224,7 +244,7 @@ Com o `cron` configurado, o script é executado automaticamente a cada minuto.
 - Notificação recebida via Discord:&#x20;
 ![Notificação do Discord](Imagens/Discord_Notify.png)
 
-- Interrupção do NGINX:
+- Interrupção do NGINX para testar a falha:
 
 ```bash
 sudo systemctl stop nginx
@@ -372,6 +392,5 @@ echo " Verificação finalizada em: $TIMESTAMP " >> "$LOG_FILE"
 Por fim, este bloco adiciona a mensagem resultante da verificação ($MESSAGE) e uma linha final ao arquivo de log, indicando que a verificação foi concluída, juntamente com o timestamp.
 
 ---
-
 > Documentação criada com base em experiência prática no uso de Linux, EC2, NGINX e automação com Shell Script. Projeto educacional para a Compass UOL 2025.
 
