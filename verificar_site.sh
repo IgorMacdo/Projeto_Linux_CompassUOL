@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# --- Configurações Iniciais ---
 URL="Sua_URL"
 TIMEOUT=10
 EXPECTED_STATUS=200
@@ -8,6 +9,7 @@ DISCORD_WEBHOOK_URL="Sua_URL_Webhook"
 
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 
+# --- Função para Enviar Notificações ao Discord ---
 send_discord_notification() {
     local message="$1"
     local color="$2"
@@ -41,12 +43,13 @@ EOF
 
 
 
-
+# --- Início da Verificação HTTP ---
 echo "Verificando a disponibilidade HTTP de $URL"
 echo "--------------------------------------------------"
 HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L --max-time "$TIMEOUT" --retry 3 --retry-max-time 30 "$URL")
 CURL_EXIT_CODE=$?
 
+# --- Lógica de Decisão Baseada no Status HTTP e Código de Saída do Curl ---
  if [ "$CURL_EXIT_CODE" -eq 0 ]; then
     if [ "$HTTP_STATUS" -eq "$EXPECTED_STATUS" ]; then
         MESSAGE="✅ Site está ONLINE e respondeu com status HTTP $HTTP_STATUS (esperado)."
@@ -63,6 +66,7 @@ else
 
 fi
 
+# --- Saída no Terminal e Finalização ---
 echo "$MESSAGE"
 
 send_discord_notification "$MESSAGE"
